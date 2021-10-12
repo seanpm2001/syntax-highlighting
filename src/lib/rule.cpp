@@ -567,6 +567,9 @@ MatchResult RangeDetect::doMatch(QStringView text, int offset, const QStringList
 RegExpr::RegExpr(const HighlightingContextData::Rule::RegExpr &data)
 {
     m_regexp.setPattern(data.pattern);
+    for (const auto& attr : data.matches) {
+        m_attributes[attr.group] = attr.attribute;
+    }
     m_regexp.setPatternOptions((data.isMinimal ? QRegularExpression::InvertedGreedinessOption : QRegularExpression::NoPatternOption)
                                | (data.caseSensitivity == Qt::CaseInsensitive ? QRegularExpression::CaseInsensitiveOption : QRegularExpression::NoPatternOption)
                                // DontCaptureOption is removed by resolvePostProcessing() when necessary
@@ -634,7 +637,7 @@ MatchResult RegExpr::doMatch(QStringView text, int offset, const QStringList &ca
          * DetectChar ignores %0, too
          */
         if (result.lastCapturedIndex() > 0) {
-            return MatchResult(offset + result.capturedLength(), result.capturedTexts());
+            return MatchResult(offset + result.capturedLength(), result.capturedTexts(), m_attributes);
         }
 
         /**

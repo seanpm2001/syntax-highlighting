@@ -51,7 +51,7 @@ static bool checkIsChar(const QStringRef &str, const char *attrName, const QStri
     return false;
 }
 
-static void loadRule(const QString &defName, std::vector<HighlightingContextData::Rule> &rules, QXmlStreamReader &reader)
+static void loadRule(const QString &defName, std::vector<HighlightingContextData::Rule> &rules, QXmlStreamReader &reader, bool* skipNext)
 {
     using Rule = HighlightingContextData::Rule;
     Rule rule;
@@ -82,6 +82,31 @@ static void loadRule(const QString &defName, std::vector<HighlightingContextData
 
         initRuleData(rule.data.regExpr, pattern.toString(), isCaseInsensitive, isMinimal, dynamic);
         rule.type = Rule::Type::RegExpr;
+
+        *skipNext = false;
+
+        // RegExp has no matches
+        if (reader.readNext() == QXmlStreamReader::EndElement) {
+            // Skip the end element...
+            reader.readNext();
+            return;
+        }
+
+        // Read to the end of the RegExp element
+        while (!(reader.isEndElement() && reader.name() == QLatin1String("RegExpr"))) {
+            // If we're reading a new <Match...
+            if (reader.name() == QLatin1String("Match") && reader.isStartElement()) {
+                const auto attributes = reader.attributes();
+                const auto group = attributes.value(QLatin1String("group")).toInt();
+                const auto attributeName = attributes.value(QLatin1String("attribute"));
+
+                rule.data.regExpr.matches << Rule::RegExpr::Match { group, attributeName.toString() };
+            }
+        }
+
+        // Go to the next element, since the loop this function is called from expects us
+        // to be at the start of an element
+        reader.readNext();
     } else if (name == QLatin1String("IncludeRules")) {
         const auto context = attrs.value(QLatin1String("context"));
         if (!checkIsNotEmpty(context, "context", defName, reader)) {
@@ -359,10 +384,14 @@ void HighlightingContextData::load(const QString &defName, QXmlStreamReader &rea
     while (!reader.atEnd()) {
         switch (reader.tokenType()) {
         case QXmlStreamReader::StartElement: {
-            loadRule(defName, rules, reader);
-            // be done with this rule, skip all subelements, e.g. no longer supported sub-rules
-            reader.skipCurrentElement();
-            reader.readNext();
+            qWarning() << reader.tokenString() << reader.name();
+            bool skipNext = true;
+            loadRule(defName, rules, reader, &skipNext);
+            if (skipNext) {
+                // be done with this rule, skip all subelements, e.g. no longer supported sub-rules
+                reader.skipCurrentElement();
+                reader.readNext();
+            }
             break;
         }
         case QXmlStreamReader::EndElement:

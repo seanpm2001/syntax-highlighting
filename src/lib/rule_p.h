@@ -300,6 +300,7 @@ protected:
 
 private:
     QRegularExpression m_regexp;
+    QMap<int, QString> m_attributes;
     bool m_isResolved = false;
 };
 

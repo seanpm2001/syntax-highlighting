@@ -9,6 +9,7 @@
 
 #include <QString>
 #include <QStringList>
+#include <QVarLengthArray>
 
 #include <vector>
 
@@ -132,6 +133,13 @@ public:
             Qt::CaseSensitivity caseSensitivity;
             bool isMinimal;
             bool dynamic;
+
+            struct Match {
+                int group;
+                QString attribute;
+            };
+
+            QVarLengthArray<Match, 8> matches;
         };
 
         struct StringDetect {

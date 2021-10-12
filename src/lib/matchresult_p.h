@@ -8,6 +8,7 @@
 #define KSYNTAXHIGHLIGHTING_MATCHRESULT_P_H
 
 #include <QStringList>
+#include <QMap>
 
 namespace KSyntaxHighlighting
 {
@@ -41,9 +42,10 @@ public:
      * @param offset offset of match
      * @param captures captures of the match
      */
-    explicit MatchResult(const int offset, const QStringList &captures)
+    explicit MatchResult(const int offset, const QStringList &captures, const QMap<int, QString>& attributes)
         : m_offset(offset)
         , m_captures(captures)
+        , m_attributes(attributes)
     {
     }
 
@@ -74,6 +76,11 @@ public:
         return m_captures;
     }
 
+    const QMap<int, QString>& attributes() const
+    {
+        return m_attributes;
+    }
+
 private:
     /**
      * match offset, filled in all constructors
@@ -89,6 +96,11 @@ private:
      * captures, optional
      */
     QStringList m_captures;
+
+    /**
+     * Attributes for captures, optional.
+     */
+    QMap<int, QString> m_attributes;
 };
 }
 

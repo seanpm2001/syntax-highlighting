@@ -565,11 +565,20 @@
   -->
   <xs:element name="RegExpr">
     <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="Match"/>
+      </xs:choice>
       <xs:attributeGroup ref="commonAttributes"/>
       <xs:attribute name="String" use="required"/>
       <xs:attribute name="insensitive" type="xs:boolean"/>
       <xs:attribute name="minimal" type="xs:boolean"/>
       <xs:attribute name="dynamic" type="xs:boolean"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Match">
+    <xs:complexType>
+      <xs:attribute name="group" type="xs:nonNegativeInteger" use="required"/>
+      <xs:attribute name="attribute"/>
     </xs:complexType>
   </xs:element>
   <!--
